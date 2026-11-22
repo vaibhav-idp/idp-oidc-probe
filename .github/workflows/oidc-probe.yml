@@ -1,0 +1,8 @@
+name: oidc-probe
+on: workflow_dispatch
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  probe:
+    uses: ./.github/workflows/oidc-probe-reusable.yml
