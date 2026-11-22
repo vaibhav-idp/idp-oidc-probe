@@ -1,0 +1,20 @@
+name: oidc-probe-reusable
+on: workflow_call
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  claims:
+    runs-on: ubuntu-latest
+    environment: probe
+    steps:
+      - name: Print OIDC claims (never the token)
+        shell: bash
+        run: |
+          token="$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r .value)"
+          payload="$(cut -d. -f2 <<<"$token" | tr "_-" "/+")"
+          while (( ${#payload} % 4 )); do payload+="="; done
+          echo "IDP-CLAIMS-BEGIN"
+          base64 -d <<<"$payload" | jq -c "{sub, aud, repository, repository_id, repository_owner, repository_owner_id, environment, job_workflow_ref}"
+          echo "IDP-CLAIMS-END"
